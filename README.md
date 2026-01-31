@@ -15,7 +15,7 @@
 
 ---
 
-GAL enables organizations to centrally manage and distribute AI coding agent configurations to developers. Your CISO defines approved settings, and developers sync them with a single command.
+GAL enables teams and individuals to centrally manage AI coding agent configurations. Define your approved settings once, sync them everywhere with a single command.
 
 ## Supported Agents
 
@@ -25,9 +25,6 @@ GAL enables organizations to centrally manage and distribute AI coding agent con
 | Cursor | `.cursor/`, `.cursorrules` | ✅ Supported |
 | Windsurf | `.windsurfrules` | ✅ Supported |
 | GitHub Copilot | `.github/copilot-instructions.md` | ✅ Supported |
-| Cline | `.clinerules`, `.cline/` | ✅ Supported |
-| Aider | `.aider*` | ✅ Supported |
-| Amazon Q | `.amazonq/` | 🔜 Coming Soon |
 
 ## Installation
 
@@ -40,20 +37,20 @@ npm install -g @scheduler-systems/gal
 ### curl (macOS/Linux)
 
 ```bash
-curl -fsSL https://gal.run/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Scheduler-Systems/gal.run/main/scripts/install.sh | bash
 ```
 
 ### PowerShell (Windows)
 
 ```powershell
-irm https://gal.run/install.ps1 | iex
+irm https://raw.githubusercontent.com/Scheduler-Systems/gal.run/main/scripts/install.ps1 | iex
 ```
 
 ## Prerequisites
 
 - **Node.js** 18.0 or higher
 - **npm** 8.0 or higher
-- A GAL organization account (sign up at [gal.run](https://gal.run))
+- A GAL account (sign up at [app.gal.run](https://app.gal.run))
 
 ## Quick Start
 
@@ -69,7 +66,7 @@ irm https://gal.run/install.ps1 | iex
 
 3. **Verify configuration applied**
    ```bash
-   gal sync --status
+   gal sync status
    ```
 
 That's it! Your AI coding agents are now configured with your organization's approved settings.
@@ -81,15 +78,12 @@ That's it! Your AI coding agents are now configured with your organization's app
 | `gal auth login` | Authenticate with GitHub |
 | `gal auth logout` | Sign out |
 | `gal sync --pull` | Download approved configuration |
-| `gal sync --status` | Check sync status |
+| `gal sync status` | Check sync status |
 | `gal --help` | Show all commands |
 
 ## Documentation
 
-- [Getting Started Guide](https://docs.gal.run/getting-started)
-- [Configuration Reference](https://docs.gal.run/configuration)
-- [Admin Guide](https://docs.gal.run/admin)
-- [FAQ](https://docs.gal.run/faq)
+See the [examples](./examples) directory for configuration guides and usage patterns.
 
 ## How It Works
 
