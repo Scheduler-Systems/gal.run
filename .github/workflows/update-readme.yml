@@ -39,17 +39,19 @@ jobs:
       - name: Update CHANGELOG
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          CHANGELOG="${{ github.event.client_payload.changelog || github.event.inputs.changelog }}"
           DATE=$(date +%Y-%m-%d)
 
           # Create new changelog entry if not exists
           if ! grep -q "## \[$VERSION\]" CHANGELOG.md; then
-            # Prepend new version after the header
-            sed -i "/^# GAL Changelog/a\\
-\\
-## [$VERSION] - $DATE\\
-\\
-- See [release notes](https://github.com/Scheduler-Systems/gal/releases/tag/v$VERSION) for details" CHANGELOG.md
+            # Create temp file with new entry
+            {
+              head -1 CHANGELOG.md
+              echo ""
+              echo "## [$VERSION] - $DATE"
+              echo ""
+              echo "- See [release notes](https://github.com/Scheduler-Systems/gal/releases/tag/v$VERSION) for details"
+              tail -n +2 CHANGELOG.md
+            } > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
           fi
 
       - name: Commit changes
