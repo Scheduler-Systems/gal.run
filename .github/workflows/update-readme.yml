@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   sync:
@@ -28,6 +29,11 @@ jobs:
         run: |
           VERSION="${{ github.event.client_payload.version || github.event.inputs.version }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create release branch
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git checkout -b release/v$VERSION
 
       - name: Update version in README
         run: |
@@ -54,14 +60,44 @@ jobs:
             } > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
           fi
 
-      - name: Commit changes
+      - name: Commit and push
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md CHANGELOG.md
-          git diff --staged --quiet || git commit -m "Release v$VERSION"
-          git push
+          if ! git diff --staged --quiet; then
+            git commit -m "Release v$VERSION"
+            git push origin release/v$VERSION
+          else
+            echo "No changes to commit"
+            exit 1
+          fi
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh pr create \
+            --title "Release v$VERSION" \
+            --body "Automated release update for v$VERSION
+
+## Changes
+- Updated version references in README
+- Added changelog entry
+
+See [full release notes](https://github.com/Scheduler-Systems/gal/releases/tag/v$VERSION) in the main repository." \
+            --base main \
+            --head release/v$VERSION
+
+      - name: Auto-merge PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PR_NUMBER=$(gh pr view release/v$VERSION --json number -q .number)
+          gh pr merge $PR_NUMBER --admin --squash --delete-branch
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
