@@ -1,4 +1,4 @@
-name: Update README
+name: Sync Release
 
 on:
   repository_dispatch:
@@ -8,22 +8,70 @@ on:
       version:
         description: 'CLI version to update'
         required: true
+      changelog:
+        description: 'Changelog entry (optional)'
+        required: false
+
+permissions:
+  contents: write
 
 jobs:
-  update:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Update version in README
+        with:
+          fetch-depth: 0
+
+      - name: Set version
+        id: version
         run: |
           VERSION="${{ github.event.client_payload.version || github.event.inputs.version }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update version in README
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Update any version references in README
           sed -i "s/gal@[0-9]*\.[0-9]*\.[0-9]*/gal@${VERSION}/g" README.md
-          
+          sed -i "s/gal\/v[0-9]*\.[0-9]*\.[0-9]*/gal\/v${VERSION}/g" README.md
+
+      - name: Update CHANGELOG
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CHANGELOG="${{ github.event.client_payload.changelog || github.event.inputs.changelog }}"
+          DATE=$(date +%Y-%m-%d)
+
+          # Create new changelog entry if not exists
+          if ! grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            # Prepend new version after the header
+            sed -i "/^# GAL Changelog/a\\
+\\
+## [$VERSION] - $DATE\\
+\\
+- See [release notes](https://github.com/Scheduler-Systems/gal/releases/tag/v$VERSION) for details" CHANGELOG.md
+          fi
+
       - name: Commit changes
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git diff --staged --quiet || git commit -m "Update CLI version to $VERSION"
+          git add README.md CHANGELOG.md
+          git diff --staged --quiet || git commit -m "Release v$VERSION"
           git push
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body: |
+            See the [full release notes](https://github.com/Scheduler-Systems/gal/releases/tag/v${{ steps.version.outputs.version }}) in the main repository.
+
+            ## Installation
+
+            ```bash
+            npm install -g @scheduler-systems/gal
+            ```
+          generate_release_notes: false
