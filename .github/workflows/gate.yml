@@ -6,6 +6,6 @@ on:
 
 jobs:
   gate:
-    runs-on: ubuntu-latest
+    runs-on: arc-linux
     steps:
       - run: echo "Ready to merge"
