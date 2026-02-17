@@ -9,3 +9,8 @@ jobs:
     runs-on: arc-linux
     steps:
       - run: echo "Ready to merge"
+
+  runner-policy:
+    uses: scheduler-systems/infra/.github/workflows/runner-policy-check.yml@main
+    permissions:
+      contents: read
