@@ -35,8 +35,18 @@ jobs:
           private-key: ${{ secrets.ARC_PRIVATE_KEY }}
 
       - name: Create release branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          # Clean up stale branch from previous runs
+          git push origin --delete release/v$VERSION 2>/dev/null || true
+          git branch -D release/v$VERSION 2>/dev/null || true
+          # Close any orphaned PRs from previous runs
+          EXISTING_PR=$(gh pr list --state open --head release/v$VERSION --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr close "$EXISTING_PR" --comment "Superseded by new release run" --delete-branch 2>/dev/null || true
+          fi
           git checkout -b release/v$VERSION
 
       - name: Update version in README
