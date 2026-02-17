@@ -5,7 +5,7 @@
 <h1 align="center">GAL - Governance Agentic Layer</h1>
 
 <p align="center">
-  <strong>Governance platform for AI coding agents. Discover, centralize, and sync approved configurations for individuals and teams.</strong>
+  <strong>Governance platform for AI coding agents. Discover, centralize, and sync approved configurations across your organization.</strong>
 </p>
 
 <p align="center">
@@ -27,11 +27,10 @@
 
 GAL helps you manage AI coding agent configurations at scale:
 
-- **Auto-Discovery** - Automatically scan repositories to find existing AI agent configurations
-- **Approved Config** - Set organization-wide approved settings
+- **Auto-Discovery** - Scan repositories to find existing AI agent configurations
+- **Approved Config** - Set organization-wide approved settings for all platforms
 - **Config Sync** - Pull approved configs with a single command
-- **MCP Server** - Full API access via Model Context Protocol for AI coding agents
-- **Background Agents** - Dispatch and coordinate background coding agents
+- **MCP Server** - Full governance API access via Model Context Protocol
 
 ## Supported Platforms
 
@@ -68,114 +67,54 @@ gal auth login
 gal sync --pull
 ```
 
+This pulls your organization's approved configs and sets up MCP for all supported platforms automatically.
+
 ## MCP Server
 
-GAL provides a hosted MCP (Model Context Protocol) server that gives AI coding agents full access to the GAL API.
+GAL provides an MCP server that gives AI coding agents access to the governance API. Use the **stdio transport** (recommended) or the hosted HTTP endpoint.
 
-**Hosted endpoint:** `https://api.gal.run/mcp`
+### Setup
 
-### Claude Code
+Add the GAL MCP server to your project. The configuration is the same across all platforms:
 
-Add to `.mcp.json` in your project root:
+```json
+{
+  "mcpServers": {
+    "gal": {
+      "command": "npx",
+      "args": ["-y", "@scheduler-systems/gal-mcp-session"]
+    }
+  }
+}
+```
+
+| Platform | Config File |
+|----------|-------------|
+| Claude Code | `.mcp.json` |
+| Cursor | `.cursor/mcp.json` |
+| Windsurf | `.windsurf/mcp_config.json` |
+| Gemini | `.gemini/settings.json` |
+
+> **Tip:** `gal sync --pull` auto-configures MCP for all platforms.
+
+### Hosted HTTP (alternative)
+
+For environments where stdio is not available, use the hosted endpoint:
 
 ```json
 {
   "mcpServers": {
     "gal": {
       "type": "streamable-http",
-      "url": "https://api.gal.run/mcp",
-      "headers": {
-        "Authorization": "Bearer YOUR_GAL_TOKEN"
-      }
+      "url": "https://api.gal.run/mcp"
     }
   }
 }
 ```
 
-Or use the stdio transport (no token needed if authenticated via CLI):
+Authenticate with `Authorization: Bearer <token>` header. Get your token with `gal auth token`.
 
-```json
-{
-  "mcpServers": {
-    "gal": {
-      "command": "npx",
-      "args": ["-y", "@scheduler-systems/gal-mcp-session"]
-    }
-  }
-}
-```
-
-> **Tip:** `gal sync --pull` auto-configures this for you.
-
-### Cursor
-
-Add to `.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "gal": {
-      "command": "npx",
-      "args": ["-y", "@scheduler-systems/gal-mcp-session"]
-    }
-  }
-}
-```
-
-### Windsurf
-
-Add to `.windsurf/mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "gal": {
-      "command": "npx",
-      "args": ["-y", "@scheduler-systems/gal-mcp-session"]
-    }
-  }
-}
-```
-
-### Gemini
-
-Add to your Gemini settings (`settings.json`):
-
-```json
-{
-  "mcpServers": {
-    "gal": {
-      "command": "npx",
-      "args": ["-y", "@scheduler-systems/gal-mcp-session"]
-    }
-  }
-}
-```
-
-### Codex
-
-Codex reads MCP configuration from `AGENTS.md`. Run `gal sync --pull` to generate an `AGENTS.md` with GAL integration instructions, or manually add:
-
-```
-## MCP Servers
-
-- **GAL**: `npx -y @scheduler-systems/gal-mcp-session` - Organization governance and agent coordination
-```
-
-### GitHub Copilot
-
-Copilot supports MCP servers at the organization level. Configure via your GitHub organization settings or add the GAL MCP server URL in your Copilot agent configuration.
-
-### Get Your Token
-
-```bash
-gal auth login    # Authenticate with GitHub
-gal auth token    # Print your GAL token
-```
-
-### Available MCP Tools
-
-The MCP server exposes governance and agent coordination tools:
+### Available Tools
 
 | Category | Tools | Description |
 |----------|-------|-------------|
@@ -184,38 +123,25 @@ The MCP server exposes governance and agent coordination tools:
 | Config Governance | 8 | Proposals, versions, tracked repos |
 | Team Management | 3 | List members, set roles, sync |
 | Compliance | 3 | Scan compliance, get results, SDLC status |
-| Agent Coordination | 16 | Sessions, dispatch, work items, branch claims |
 
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
 | `gal auth login` | Authenticate with GitHub |
+| `gal auth token` | Print your GAL token |
 | `gal sync --pull` | Pull approved configurations |
 | `gal sync --status` | Check sync status |
 | `gal discover` | Scan org repos for AI agent configs |
 
-## CI/CD Integration
-
-```yaml
-- name: Install GAL CLI
-  run: npm install -g @scheduler-systems/gal-run
-
-- name: Sync configs
-  run: gal sync --pull
-  env:
-    GAL_TOKEN: ${{ secrets.GAL_TOKEN }}
-```
-
 ## Documentation
 
-https://gal.run/docs
+[gal.run/docs](https://gal.run/docs)
 
 ## Support
 
-- Documentation: https://gal.run/docs
 - Email: support@scheduler-systems.com
-- Issues: https://github.com/Scheduler-Systems/gal-run/issues
+- Issues: [github.com/Scheduler-Systems/gal-run/issues](https://github.com/Scheduler-Systems/gal-run/issues)
 
 ## License
 
