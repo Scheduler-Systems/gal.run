@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   sync:
@@ -54,7 +55,7 @@ jobs:
             } > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
           fi
 
-      - name: Commit and push to main
+      - name: Commit and push via PR
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
@@ -63,9 +64,23 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md CHANGELOG.md
           if ! git diff --staged --quiet; then
+            BRANCH="release/v${VERSION}"
+            git checkout -b "$BRANCH"
             git commit -m "Release v$VERSION"
             git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-            git push origin HEAD:main
+            # Push to feature branch (not protected by rulesets)
+            git push origin "$BRANCH" --force
+            # Create PR and merge via API (app token bypasses branch protection)
+            PR_URL=$(gh pr create --base main --head "$BRANCH" \
+              --title "Release v$VERSION" \
+              --body "Automated release version update" \
+              --repo "${{ github.repository }}")
+            PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+            # Merge immediately - app token has bypass_mode: "always" on rulesets
+            gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER/merge" \
+              -X PUT -f merge_method="squash"
+            # Clean up release branch
+            git push origin --delete "$BRANCH" || true
           else
             echo "No changes to commit - version already up to date"
           fi
