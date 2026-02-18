@@ -94,6 +94,7 @@ Add the GAL MCP server to your project. The configuration is the same across all
 | Cursor | `.cursor/mcp.json` |
 | Windsurf | `.windsurf/mcp_config.json` |
 | Gemini | `.gemini/settings.json` |
+| Codex | Use `codex mcp add ...` (global Codex config) |
 
 > **Tip:** `gal sync --pull` auto-configures MCP for all platforms.
 
@@ -113,6 +114,25 @@ For environments where stdio is not available, use the hosted endpoint:
 ```
 
 Authenticate with `Authorization: Bearer <token>` header. Get your token with `gal auth token`.
+
+### Codex Setup
+
+Preferred (OAuth):
+
+```bash
+codex mcp add gal --url https://api.gal.run/mcp
+codex mcp login gal
+```
+
+If OAuth login fails with `Dynamic client registration not supported`, use bearer-token mode:
+
+```bash
+export GAL_AUTH_TOKEN="$(gal auth token)"
+codex mcp remove gal
+codex mcp add gal --url https://api.gal.run/mcp --bearer-token-env-var GAL_AUTH_TOKEN
+```
+
+If `/mcp` shows `Tools: (none)`, verify `GAL_AUTH_TOKEN` is available in the Codex process environment, then restart Codex.
 
 ### Available Tools
 
